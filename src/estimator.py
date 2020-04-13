@@ -1,3 +1,11 @@
+
+def estimator(data):
+    return  
+
+## Challenge 1
+ ## estimateCurrentlyInfected
+ ## estimateProjectedInfections
+
 def test_challenge1():
           for [period_type, challenge] in cases:
             loop = asyncio.get_event_loop()
@@ -9,4 +17,4 @@ def test_challenge1():
             estimate = input["estimate"]
         
             output = estimator(data)
-    >       values = test_utils.value_on_fields(output, estimate, challenge)
+            values = test_utils.value_on_fields(output, estimate, challenge)
