@@ -1,128 +1,76 @@
-import json
-import logging
+## Challenge 1
+def convertToDays(period_type, timeToElapse):
+  if period_type == 'days':
+    return timeToElapse
 
-sample_data = {
-    'region': {
-        'name': 'Africa',
-        'avgAge': 19.7,
-        'avgDailyIncomeInUSD': 4,
-        'avgDailyIncomePopulation': 0.73
-    },
-    'periodType': 'days',
-    'timeToElapse': 38,
-    'reportedCases': 2747,
-    'population': 92931687,
-    'totalHospitalBeds': 678874
-}
+  elif period_type == 'weeks':
+    return timeToElapse * 7
 
-stats = {
-    'region': {
-        'name': 'Africa',
+  elif period_type == 'months':
+    return timeToElapse * 30
+
+  else:
+    return 'Incorrect input'
+
+period_type = input('Enter a period- days, weeks or months')
+timeToElapse = int(input('Enter the number of days'))
+reportedCases = int(input('Enter the number of reported cases'))
+population = int(input('Population'))
+totalHospitalBeds = int(input('Hospital beds'))
+currentlyInfected = 0
+infectionsByRequestedTime = 0
+
+dataInput: {
+
+    'region':{
+
+        'name': "Africa",
         'avgAge': 19.7,
         'avgDailyIncomeInUSD': 5,
         'avgDailyIncomePopulation': 0.71
+
     },
-    'periodType': 'days',
-    'timeToElapse': 58,
-    'reportedCases': 674,
-    'population': 66622705,
-    'totalHospitalBeds': 1380614
+
+      'period_type' : "days",
+      'timeToElapse' : 58,
+      'reportedCases' : 674,
+      'population' : 66622705,
+      'totalHospitalBeds' : 1380614
+    
 }
 
+dataInput ['timeToElapse'] = convertToDays(dataInput['periodType'], dataInput['timeToElapse'])
 
-def requestedTimeFactorCalculator(periodType, timeToElapse):
-    if periodType == 'days':
-        days = timeToElapse
-        logging.debug(
-            'using {} days'.format(days))
-        return 2 ** int(days/3)
-    elif periodType == 'weeks':
-        days = timeToElapse * 7
-        logging.debug(
-            'using {} weeks which has {} days'.format(timeToElapse, days))
-        return 2 ** int(days/3)
-    elif periodType == 'months':
-        days = timeToElapse * 30
-        logging.debug(
-            'using {} months which has {} days'.format(timeToElapse, days))
-        return 2 ** int(days/3)
-    else:
-        raise Exception(
-            'Period should be days, weeks or months'
-            '{} was given'.format(periodType))
+data = {
+
+    'data' : dataInput,
+
+    'impact' : {
+      'currentlyInfected' : dataInput['reportedCases'] * 10,
+    },
+
+    'severeImpact' : {
+      'currentlyInfected' : dataInput['reportedCases'] * 50,
+    }
+
+  }
 
 
-def timeToElapseInDays(periodType, timeToElapse):
-    if periodType == 'days':
-        days = timeToElapse
-        logging.debug(
-            'using {} days'.format(days))
-        return days
-    elif periodType == 'weeks':
-        days = timeToElapse * 7
-        logging.debug(
-            'using {} weeks which has {} days'.format(timeToElapse, days))
-        return days
-    elif periodType == 'months':
-        days = timeToElapse * 30
-        logging.debug(
-            'using {} months which has {} days'.format(timeToElapse, days))
-        return days
-    else:
-        raise Exception(
-            'Period should be days, weeks or months'
-            '{} was given'.format(periodType))
+data['impact']['infectionsByRequestedTime'] = data['impact']['currentlyInfected'] * (2 ** (timeToElapse/3))
+data['severeImpact']['infectionsByRequestedTime'] = data['severeImpact']['currentlyInfected'] * (2 ** (timeToElapse/3))
+data['impact']['severeCasesByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (15/100)
+data['severeImpact']['severeCasesByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (15/100)
+data['impact']['hospitalBedsByRequestedTime'] = data['impact']['severeCasesByRequestedTime'] - data['data']['totalHospitalBeds']
+data['severeImpact']['hospitalBedsByRequestedTime'] = data['severeImpact']['severeCasesByRequestedTime'] - data['data']['totalHospitalBeds']
+data['impact']['casesForICUByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (5/100)
+data['severeImpact']['casesForICUByRequestedTime'] = data['severeImpact']['infectionsByRequestedTime'] * (5/100)
+data['impact']['casesForVentilatorsByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (2/100)
+data['severeImpact']['casesForVentilatorsByRequestedTime'] = data['severeImpact']['infectionsByRequestedTime'] * (2/100)
 
-
-def bedAvailabilityCalculator(totalHospitalBeds, severeCasesByRequestedTime):
-    occupied = totalHospitalBeds * 0.65
-    available = totalHospitalBeds - occupied
-    availableForPatients = available - severeCasesByRequestedTime
-    return int(availableForPatients)
-
-
-def dollarsInFlightCalculator(infectionsByTime, avgIncomePop, avgIncome,
-                              periodType, period):
-    days = timeToElapseInDays(periodType, period)
-    return int((infectionsByTime * avgIncomePop * avgIncome) / days)
-
-
-def impact(data, impactType):
-    reportedCases = data['reportedCases']
-    if impactType == 'normal':
-        currentlyInfected = reportedCases * 10
-    elif impactType == 'severe':
-        currentlyInfected = reportedCases * 50
-    else:
-        raise Exception('Unsupported impact type given')
-
-    totalBeds = data['totalHospitalBeds']
-    timeToElapse = data['timeToElapse']
-    periodType = data['periodType']
-    timeFactor = requestedTimeFactorCalculator(
-        periodType, timeToElapse)
-    avgIncome = data['region']['avgDailyIncomeInUSD']
-    avgIncomePop = data['region']['avgDailyIncomePopulation']
-    infectionsByRequestedTime = currentlyInfected * timeFactor
-    severeCasesByRequestedTime = int(infectionsByRequestedTime * 0.15)
-    hospitalBedsByRequestedTime = bedAvailabilityCalculator(totalBeds, severeCasesByRequestedTime)
-    casesForICUByRequestedTime = int(infectionsByRequestedTime * 0.05)
-    casesForVentilators = int(infectionsByRequestedTime * 0.02)
-    dollarsInFlight = dollarsInFlightCalculator(infectionsByRequestedTime,avgIncomePop, avgIncome,periodType, timeToElapse)
-    return dict(currentlyInfected=currentlyInfected,
-                infectionsByRequestedTime=infectionsByRequestedTime,
-                severeCasesByRequestedTime=severeCasesByRequestedTime,
-                hospitalBedsByRequestedTime=hospitalBedsByRequestedTime,
-                casesForICUByRequestedTime=casesForICUByRequestedTime,
-                casesForVentilatorsByRequestedTime=casesForVentilators,
-                dollarsInFlight=dollarsInFlight)
 
 
 def estimator(data):
-    data = {
-        'data': data,
-        'impact': impact(data, 'normal'),
-        'severeImpact': impact(data, 'severe')
-    }
 
-    return data
+  return data
+
+print(estimator(data)) 
