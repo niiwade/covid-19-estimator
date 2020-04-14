@@ -10,7 +10,7 @@ def convertToDays(period_type, timeToElapse):
     return timeToElapse * 30
 
   else:
-    return 'Incorrect input'
+    return timeToElapse
 
 period_type = input('Enter a period- days, weeks or months')
 timeToElapse = int(input('Enter the number of days'))
@@ -20,7 +20,7 @@ totalHospitalBeds = int(input('Hospital beds'))
 currentlyInfected = 0
 infectionsByRequestedTime = 0
 
-dataInput: {
+data: {
 
     'region':{
 
@@ -39,38 +39,41 @@ dataInput: {
     
 }
 
-dataInput ['timeToElapse'] = convertToDays(dataInput['periodType'], dataInput['timeToElapse'])
+data ['timeToElapse'] = convertToDays(data['periodType'], data['timeToElapse'])
 
-data = {
+dataOutput = {
 
-    'data' : dataInput,
+    'data' : data,
 
     'impact' : {
-      'currentlyInfected' : dataInput['reportedCases'] * 10,
+      'currentlyInfected' : data['reportedCases'] * 10,
     },
 
     'severeImpact' : {
-      'currentlyInfected' : dataInput['reportedCases'] * 50,
+      'currentlyInfected' : data['reportedCases'] * 50,
     }
 
   }
 
-
-data['impact']['infectionsByRequestedTime'] = data['impact']['currentlyInfected'] * (2 ** (timeToElapse/3))
-data['severeImpact']['infectionsByRequestedTime'] = data['severeImpact']['currentlyInfected'] * (2 ** (timeToElapse/3))
-data['impact']['severeCasesByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (15/100)
-data['severeImpact']['severeCasesByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (15/100)
-data['impact']['hospitalBedsByRequestedTime'] = data['impact']['severeCasesByRequestedTime'] - data['data']['totalHospitalBeds']
-data['severeImpact']['hospitalBedsByRequestedTime'] = data['severeImpact']['severeCasesByRequestedTime'] - data['data']['totalHospitalBeds']
-data['impact']['casesForICUByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (5/100)
-data['severeImpact']['casesForICUByRequestedTime'] = data['severeImpact']['infectionsByRequestedTime'] * (5/100)
-data['impact']['casesForVentilatorsByRequestedTime'] = data['impact']['infectionsByRequestedTime'] * (2/100)
-data['severeImpact']['casesForVentilatorsByRequestedTime'] = data['severeImpact']['infectionsByRequestedTime'] * (2/100)
-
-
-
 def estimator(data):
 
-  return data
+    days = 2 ** int((data['timeToElapse']/3))
+    beds = int(dataOutput['data']['totalHospitalBeds'] * 0.35)
 
-print(estimator(data)) 
+    dataOutput['impact']['infectionsByRequestedTime'] = dataOutput['impact']['currentlyInfected'] * days
+    dataOutput['severeImpact']['infectionsByRequestedTime'] = dataOutput['severeImpact']['currentlyInfected'] * days
+    dataOutput['impact']['severeCasesByRequestedTime'] = dataOutput['impact']['infectionsByRequestedTime'] * 0.15
+    dataOutput['severeImpact']['severeCasesByRequestedTime'] = dataOutput['severeImpact']['infectionsByRequestedTime'] * 0.15
+    dataOutput['impact']['hospitalBedsByRequestedTime'] =  beds - dataOutput['impact']['severeCasesByRequestedTime']
+    dataOutput['severeImpact']['hospitalBedsByRequestedTime'] = beds - dataOutput['severeImpact']['severeCasesByRequestedTime']
+    dataOutput['impact']['casesForICUByRequestedTime'] =int(round(dataOutput['impact']['infectionsByRequestedTime'] * (5/100), 2))
+    dataOutput['severeImpact']['casesForICUByRequestedTime'] = int(round(dataOutput['severeImpact']['infectionsByRequestedTime'] * (5/100), 2))
+    dataOutput['impact']['casesForVentilatorsByRequestedTime'] = int(round(dataOutput['impact']['infectionsByRequestedTime'] * (2/100), 2))
+    dataOutput['severeImpact']['casesForVentilatorsByRequestedTime'] = int(round(dataOutput['severeImpact']['infectionsByRequestedTime'] * (2/100), 2))
+    dataOutput['impact']['dollarsInFlight'] = int((dataOutput['impact']['infectionsByRequestedTime'] * data['region']['avgDailyIncomePopulation']) * data['region']['avgDailyIncomeInUSD'] * data['timeToElapse'])
+    dataOutput['severeImpact']['dollarsInFlight'] = int((dataOutput['severeImpact']['infectionsByRequestedTime'] * data['region']['avgDailyIncomePopulation']) * data['region']['avgDailyIncomeInUSD'] * data['timeToElapse'])
+
+    return dataOutput
+
+print (estimator(data))
+
