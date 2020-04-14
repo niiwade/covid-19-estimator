@@ -1,1 +1,0 @@
-def convertToDays(period_type, timeToElapse):
