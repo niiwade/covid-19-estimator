@@ -82,7 +82,7 @@ print (estimator(data))
 
   #calculate the number of days
 
-def number_of_days(periodtype, time_to_elapse):
+  def number_of_days(periodtype, time_to_elapse):
     if periodtype == 'days':
         days = time_to_elapse
 
@@ -109,7 +109,7 @@ def money_lost(case):
     inf = infected_till_date(case)
     days = number_of_days(periodtype, time_to_elapse)
     return int((inf * income_population * income) / days)
-    
+
 tt = {
         
         "region": {
